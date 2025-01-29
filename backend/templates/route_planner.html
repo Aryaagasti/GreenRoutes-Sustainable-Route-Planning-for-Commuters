@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Planner - GreenRoute</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-line/254000/175-512.png">
+    <style>
+        body {
+            background: linear-gradient(to right, #e8f5e9, #fffde7);
+            color: #33691e;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background-color: #33691e;
+        }
+        .navbar-brand, .nav-link {
+            color: #ffeb3b !important;
+        }
+        .navbar-brand:hover, .nav-link:hover {
+            color: #cddc39 !important;
+        }
+        .jumbotron {
+            background: url('static/images/GreenRoute eco-friendly and efficient theme background image for hero page.png') no-repeat center center;
+            background-size: cover;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px #000000;
+            padding: 2rem;
+            border-radius: 8px;
+        }
+        .jumbotron h1, .jumbotron p {
+            background: rgba(51, 105, 30, 0.8);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+        .display-4 {
+            color: #ffeb3b;
+        }
+        .lead {
+            font-size: 1.25rem;
+            font-weight: 300;
+        }
+        .container {
+            margin-top: 2rem;
+            padding: 2rem;
+            border-radius: 8px;
+            background-color: #f1f8e9;
+        }
+        .btn-primary {
+            background-color: #ffeb3b;
+            border-color: #ffeb3b;
+            color: #33691e;
+        }
+        .btn-primary:hover {
+            background-color: #cddc39;
+            border-color: #cddc39;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <a class="navbar-brand" href="/">GreenRoute</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/route_planner">Route Planner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/visualization_insights">Visualization Insights</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="jumbotron mt-4">
+            <h1 class="display-4">Route Planner</h1>
+        </div>
+        <form id="route-form" class="mt-4">
+            <div class="form-group row">
+                <label for="start" class="col-sm-2 col-form-label">Start</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="start" required>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="end" class="col-sm-2 col-form-label">End</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="end" required>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="date" class="col-sm-2 col-form-label">Date</label>
+                <div class="col-sm-10">
+                    <input type="date" class="form-control" id="date" required>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="text" class="col-sm-2 col-form-label">Text</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="text" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Get Route and AI Content</button>
+        </form>
+        <div id="route-info" class="mt-4"></div>
+        <div id="ai-content" class="mt-4"></div>
+    </div>
+    <script>
+        document.getElementById('route-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+            const date = document.getElementById('date').value;
+            const text = document.getElementById('text').value;
+
+            // Call the route API
+            const routeResponse = await fetch('/route', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ start, end, date })
+            });
+            const routeData = await routeResponse.json();
+            displayRouteInfo(routeData);
+
+            // Call the AI content generation API
+            const aiResponse = await fetch('/generate_ai', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ text })
+            });
+            const aiData = await aiResponse.json();
+            displayAIContent(aiData);
+        });
+
+        function displayRouteInfo(routeData) {
+            const routeInfoDiv = document.getElementById('route-info');
+            routeInfoDiv.innerHTML = `
+                <h2>Route Information</h2>
+                <p><strong>Start Location:</strong> ${routeData.start}</p>
+                <p><strong>End Location:</strong> ${routeData.end}</p>
+                <p><strong>Distance:</strong> ${routeData.distance}</p>
+                <p><strong>Weather:</strong> ${routeData.weather}</p>
+                <p><strong>Traffic Suggestion:</strong> ${routeData.suggestion}</p>
+                <p><strong>Carbon Emission:</strong> ${routeData.carbon_emission} kg CO2</p>
+                <p><strong>Public Transport Availability:</strong> ${routeData.public_transport}%</p>
+            `;
+        }
+
+        function displayAIContent(aiData) {
+            const aiContentDiv = document.getElementById('ai-content');
+            const content = aiData.candidates[0].content.parts[0].text;
+            aiContentDiv.innerHTML = `
+                <h2>AI-Generated Content</h2>
+                <p>${content}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
